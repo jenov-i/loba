@@ -4,7 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#111b21" />
-    <title>LOBA — Messagerie WebRTC</title>
+    <meta
+      name="description"
+      content="LOBA — messagerie instantanée, appels audio et vidéo, messages vocaux et partage de fichiers."
+    />
+    <title>LOBA — Messagerie et appels</title>
     <link rel="icon" href="/img/logo.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/css/style.css" />
   </head>
@@ -20,7 +24,7 @@
           <img src="/img/logo.svg" alt="" class="brand-logo" />
           <div>
             <h1>LOBA</h1>
-            <p>Messagerie instantanée &amp; appels WebRTC</p>
+            <p>Messagerie instantanée &amp; appels audio/vidéo</p>
           </div>
         </div>
 
@@ -41,7 +45,7 @@
               id="loginUsername"
               name="username"
               autocomplete="username"
-              placeholder="alice"
+              placeholder="ton.identifiant"
               required
             />
           </label>
@@ -58,8 +62,7 @@
           </label>
           <button class="btn btn-primary" type="submit">Se connecter</button>
           <p class="auth-hint">
-            Comptes de démonstration : <code>alice</code>, <code>bob</code> ou
-            <code>carol</code> — mot de passe <code>loba1234</code>
+            Pas encore de compte ? Clique sur <strong>Créer un compte</strong>.
           </p>
         </form>
 
@@ -104,7 +107,7 @@
       </div>
 
       <p class="auth-footer">
-        Projet WebRTC — PeerJS · Socket.IO · PostgreSQL · MinIO
+        LOBA · Messagerie privée · Appels audio et vidéo
       </p>
     </section>
 
@@ -280,7 +283,7 @@
           <form id="groupForm" class="group-form">
             <input
               id="groupName"
-              placeholder="Nom du groupe (ex: Projet WebRTC)"
+              placeholder="Nom du groupe (ex: Équipe produit)"
               maxlength="60"
               required
             />

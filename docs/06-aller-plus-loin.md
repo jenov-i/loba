@@ -122,9 +122,9 @@ participant et le rediffuse aux autres. Chaque navigateur n'envoie qu'**un**
 flux, quel que soit le nombre de participants.
 
 ```
-        Alice ──► ┌─────────┐ ──► Bob
-        Bob   ──► │   SFU   │ ──► Carol
-        Carol ──► └─────────┘ ──► Alice
+        Amina ──► ┌─────────┐ ──► Yann
+        Yann  ──► │   SFU   │ ──► Sarah
+        Sarah ──► └─────────┘ ──► Amina
 ```
 
 Solutions open source :
@@ -156,8 +156,8 @@ signalisation PeerJS n'est plus nécessaire.
 
 ## 4. Sécurité
 
-LOBA est un projet pédagogique. Voici les points à renforcer avant un usage
-réel.
+LOBA fonctionne tel quel pour un usage quotidien. Voici les points à renforcer
+avant de l'ouvrir à un large public.
 
 ### 4.1 Limiter les tentatives de connexion
 
@@ -268,14 +268,13 @@ complexe.
 
 Prérequis : un domaine pointant vers le serveur, Docker, Node.js.
 
-1. **Installer le projet** :
+1. **Installer LOBA** :
    ```bash
    git clone https://github.com/jenov-i/loba.git
    cd loba
    cp .env.example .env
    npm install
    docker compose up -d
-   npm run seed
    ```
 
 2. **Ne pas exposer le port 3000 directement.** Utilise un reverse proxy avec
@@ -481,7 +480,7 @@ Il faut aussi :
 
 ---
 
-## 8. Exercices pour apprendre
+## 8. Pistes d'implémentation
 
 1. **Ajouter un thème clair** : duplique les variables CSS dans
    `public/css/style.css` et ajoute un bouton qui bascule une classe sur
@@ -554,7 +553,4 @@ LOBA montre l'essentiel d'une application de communication moderne :
 - **HTTPS** pour la sécurité et l'accès au matériel.
 
 Les limites sont connues et documentées. Chaque section de ce document est une
-piste concrète pour transformer ce projet pédagogique en application plus
-robuste.
-
-Bon développement !
+piste concrète pour faire évoluer LOBA vers une application plus robuste.

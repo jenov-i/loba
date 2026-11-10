@@ -96,7 +96,6 @@ Si tu as changé `docker-compose.yml` après coup, l'ancien mot de passe reste.
 ```bash
 docker compose down -v
 docker compose up -d
-npm run seed
 ```
 
 **Solution sans perte de données :** connecte-toi en superutilisateur et
@@ -356,8 +355,10 @@ Découpe le message ou envoie un fichier texte.
 
 - Les identifiants sont **sensibles à la casse** pour le mot de passe, mais
   l'identifiant est converti en minuscules.
-- Les comptes de démo n'existent qu'après `npm run seed`.
-- Si tu as réinitialisé les volumes Docker, il faut relancer `npm run seed`.
+- Les comptes sont créés depuis l'onglet **Créer un compte** de la page de
+  connexion.
+- Si tu as réinitialisé les volumes Docker, les comptes ont été effacés :
+  recrée-en un depuis l'interface.
 
 ### 5.2 « Cet identifiant est déjà utilisé »
 
@@ -425,21 +426,20 @@ un bug de LOBA. Voir
 
 ## 7. Réinitialiser proprement
 
-### 7.1 Réinitialiser les comptes de démo
+### 7.1 Créer un nouveau compte
 
-```bash
-npm run seed
-```
-
-Les comptes existants sont mis à jour, les messages sont conservés.
+Ouvre l'application et clique sur **Créer un compte**. Les comptes existants
+et leurs messages sont conservés.
 
 ### 7.2 Effacer toutes les données PostgreSQL (Docker)
 
 ```bash
 docker compose down -v
 docker compose up -d
-npm run seed
 ```
+
+Les tables sont recréées au démarrage. Crée ensuite un compte depuis
+l'interface.
 
 ### 7.3 Effacer les fichiers MinIO (Docker)
 
@@ -532,7 +532,6 @@ rm -f .env
 cp .env.example .env
 npm install
 docker compose up -d
-npm run seed
 npm start
 ```
 

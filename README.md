@@ -1,12 +1,11 @@
-# LOBA — messagerie WebRTC (projet pédagogique)
+# LOBA — messagerie instantanée et appels
 
-> **LOBA** est un clone minimaliste de WhatsApp Web : messagerie instantanée,
-> appels audio/vidéo, messages vocaux, partage de fichiers, discussions privées
-> et groupes. Le tout avec **Node.js, Socket.IO, PeerJS (WebRTC), PostgreSQL et
-> MinIO**, sans framework front-end ni étape de build.
+> **LOBA** réunit la messagerie, les appels audio/vidéo, les messages vocaux et
+> le partage de fichiers dans une interface simple. Discussions privées,
+> groupes et appels directs, avec **Node.js, Socket.IO, PeerJS (WebRTC),
+> PostgreSQL et MinIO**. Aucun framework front-end, aucune étape de build.
 
-Ce projet a été réalisé dans le cadre du cours
-**« Développement d'applications de communications sur le web (WebRTC) »**.
+LOBA fonctionne avec un compte que tu crées toi-même.
 
 ---
 
@@ -18,7 +17,7 @@ Ce projet a été réalisé dans le cadre du cours
 - [Démarrage rapide (5 minutes)](#démarrage-rapide-5-minutes)
 - [Tester à deux (ou depuis un téléphone)](#tester-à-deux-ou-depuis-un-téléphone)
 - [Commandes utiles](#commandes-utiles)
-- [Structure du projet](#structure-du-projet)
+- [Structure du code](#structure-du-code)
 - [Comment ça marche (résumé)](#comment-ça-marche-résumé)
 - [Dépannage express](#dépannage-express)
 - [Limites connues et sécurité](#limites-connues-et-sécurité)
@@ -83,7 +82,7 @@ Ce projet a été réalisé dans le cadre du cours
 | **PostgreSQL** | Utilisateurs, messages, conversations, appels | Base relationnelle fiable |
 | **MinIO** | Stockage des fichiers et vocaux (API S3) | Fichiers privés, pas dans la base |
 | **HTTPS** | Sécurité + accès micro/caméra | `getUserMedia` exige un contexte sécurisé |
-| **HTML/CSS/JS** | Interface (aucun framework, aucun build) | Code lisible pour un débutant |
+| **HTML/CSS/JS** | Interface (aucun framework, aucun build) | Base légère et facile à personnaliser |
 
 > **Note sur MinIO :** MinIO n'est plus distribué librement sur Docker Hub.
 > Le `docker-compose.yml` utilise donc une image MinIO archivée par Bitnami.
@@ -100,7 +99,7 @@ Ce projet a été réalisé dans le cadre du cours
 - **Docker + Docker Compose** — [installer Docker](https://docs.docker.com/engine/install/).
   (Pas Docker ? Voir [l'installation sans Docker](docs/04-installation-pas-a-pas.md#5-option-b--sans-docker).)
 
-### 2. Récupérer le projet
+### 2. Récupérer le code
 
 ```bash
 git clone https://github.com/jenov-i/loba.git
@@ -127,15 +126,11 @@ Vérifie que les deux conteneurs tournent :
 docker compose ps
 ```
 
-### 5. Installer les dépendances et créer les comptes de démo
+### 5. Installer les dépendances
 
 ```bash
 npm install
-npm run seed
 ```
-
-`npm run seed` crée trois comptes (**alice**, **bob**, **carol**) avec le mot de
-passe **`loba1234`**, une discussion privée et un groupe.
 
 ### 6. Lancer LOBA
 
@@ -161,10 +156,9 @@ Va sur **https://localhost:3000**.
 > Clique sur **Paramètres avancés** → **Continuer vers localhost (dangereux)**.
 > Sans cela, le navigateur refusera l'accès au micro et à la caméra.
 
-Connecte-toi avec :
-
-- identifiant : **`alice`**
-- mot de passe : **`loba1234`**
+Clique sur **Créer un compte**, choisis un nom, un identifiant et un mot de
+passe. Tu peux ensuite rechercher d'autres personnes inscrites et démarrer une
+discussion.
 
 ---
 
@@ -175,11 +169,12 @@ Connecte-toi avec :
 Le plus simple est d'utiliser **deux profils de navigateur différents**
 (ou une fenêtre de navigation privée), car une session = un cookie :
 
-1. Fenêtre normale → connecte-toi en **alice**.
-2. Fenêtre privée → connecte-toi en **bob**.
-3. Alice ouvre la discussion « Bob Nguema » et envoie un message.
+1. Fenêtre normale → crée un premier compte.
+2. Fenêtre privée → crée un second compte.
+3. Le premier compte ouvre la discussion avec le second et envoie un message.
 4. Clique sur l'icône 📞 (audio) ou 🎥 (vidéo).
-5. Chez Bob, la sonnerie retentit : clique sur le bouton vert pour accepter.
+5. Chez l'autre personne, la sonnerie retentit : clique sur le bouton vert
+   pour accepter.
 
 > Utilise **deux navigateurs différents** (Chrome + Firefox) si tu veux tester
 > un appel : certains systèmes n'autorisent qu'un seul accès à la caméra à la fois.
@@ -189,7 +184,7 @@ Le plus simple est d'utiliser **deux profils de navigateur différents**
 1. Au démarrage, LOBA affiche une adresse `https://192.168.x.x:3000`.
 2. Ouvre cette adresse sur le téléphone (même réseau Wi‑Fi).
 3. Accepte l'avertissement de certificat.
-4. Connecte-toi avec un autre compte.
+4. Crée un compte ou connecte-toi avec un autre compte.
 
 Si l'adresse ne s'ouvre pas : vérifie le pare-feu de l'ordinateur (port 3000).
 
@@ -201,7 +196,6 @@ Si l'adresse ne s'ouvre pas : vérifie le pare-feu de l'ordinateur (port 3000).
 |---|---|
 | `npm start` | Démarre le serveur (HTTPS sur le port 3000) |
 | `npm run dev` | Démarre avec rechargement automatique |
-| `npm run seed` | Crée/actualise les comptes de démonstration |
 | `npm run cert` | Régénère le certificat HTTPS (après un changement d'IP) |
 | `npm run s3` | Démarre un stockage S3 local (sans Docker/MinIO) |
 | `docker compose up -d` | Démarre PostgreSQL + MinIO |
@@ -210,7 +204,7 @@ Si l'adresse ne s'ouvre pas : vérifie le pare-feu de l'ordinateur (port 3000).
 
 ---
 
-## Structure du projet
+## Structure du code
 
 ```
 LOBA/
@@ -242,7 +236,6 @@ LOBA/
 │
 ├── sql/schema.sql            # Structure de la base de données
 ├── scripts/
-│   ├── seed.js               # Comptes de démonstration
 │   ├── generate-cert.js      # Régénère certs/
 │   └── dev-s3.js             # Stockage S3 local sans Docker
 ├── docs/                     # Documentation détaillée (en français)
@@ -309,7 +302,8 @@ Le guide complet : **[docs/05-depannage.md](docs/05-depannage.md)**
 
 ## Limites connues et sécurité
 
-Ce projet est **pédagogique**, pas prêt pour la production :
+LOBA est conçu pour un usage simple et un déploiement léger. Voici ce qu'il
+faut garder en tête avant de l'ouvrir à un large public :
 
 - **Appels de groupe en maillage (mesh)** : chaque participant est connecté à
   tous les autres. Recommandé jusqu'à **4 personnes**. Au-delà, il faut un
@@ -335,7 +329,7 @@ Ces points sont détaillés avec des pistes d'amélioration dans
 | Document | Contenu |
 |---|---|
 | [01 — Comment ça marche](docs/01-comment-ca-marche.md) | WebRTC, SDP, ICE, PeerJS, Socket.IO, sonnerie, flux d'un message et d'un appel |
-| [02 — Architecture du projet](docs/02-architecture-du-projet.md) | Rôle de chaque fichier, base de données, API, événements Socket.IO |
+| [02 — Architecture du code](docs/02-architecture-du-code.md) | Rôle de chaque fichier, base de données, API, événements Socket.IO |
 | [03 — Guide d'utilisation](docs/03-guide-utilisation.md) | Créer un compte, discuter, envoyer des fichiers/vocaux, appeler |
 | [04 — Installation pas à pas](docs/04-installation-pas-a-pas.md) | Installation détaillée avec et sans Docker, certificats, réseau |
 | [05 — Dépannage](docs/05-depannage.md) | Tous les problèmes courants et leurs solutions |
@@ -345,4 +339,4 @@ Ces points sont détaillés avec des pistes d'amélioration dans
 
 ## Licence
 
-[MIT](LICENSE) — projet réalisé à des fins pédagogiques.
+[MIT](LICENSE)

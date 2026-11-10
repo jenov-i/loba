@@ -1,4 +1,4 @@
-# 02 — Architecture du projet
+# 02 — Architecture du code
 
 Ce document décrit l'organisation du code, la base de données, l'API REST et
 les événements temps réel. Il s'adresse à quelqu'un qui veut **comprendre** ou
@@ -78,7 +78,6 @@ LOBA/
 │
 ├── sql/schema.sql              Tables, contraintes et index
 ├── scripts/
-│   ├── seed.js                 Comptes de démo + conversations
 │   ├── generate-cert.js        Régénère le certificat
 │   └── dev-s3.js               Serveur S3 local sans Docker (s3rver)
 │
@@ -93,7 +92,7 @@ LOBA/
 ### Pourquoi du CommonJS côté serveur et des modules ES côté navigateur ?
 
 - Le serveur utilise `require()` / `module.exports` : c'est le style le plus
-  courant dans les cours Node.js, et il fonctionne sans configuration.
+  répandu avec Node.js, et il fonctionne sans configuration.
 - Le navigateur utilise `import` / `export` natifs : aucun bundler, aucun
   build. `<script type="module" src="/js/app.js">` suffit.
 
@@ -281,11 +280,11 @@ métier importante : **une seule discussion directe par paire**.
 POST /api/conversations
 Content-Type: application/json
 
-{ "type": "group", "name": "Projet WebRTC", "memberIds": [4, 5] }
+{ "type": "group", "name": "Équipe Produit", "memberIds": [4, 5] }
 ```
 
 Le créateur est ajouté automatiquement. Un message `system` est inséré
-(« Alice a créé le groupe… »), puis tous les membres reçoivent
+(« Amina a créé le groupe… »), puis tous les membres reçoivent
 `conversation:new` et leurs sockets rejoignent la room `conv:<id>`.
 
 ### Téléverser un fichier
@@ -482,24 +481,24 @@ Le fichier `.env` n'est **jamais** versionné (voir `.gitignore`). Seul
 
 | Choix | Raison | Limite |
 |---|---|---|
-| Un seul serveur Node | Simplicité pédagogique | Pas de montée en charge horizontale |
+| Un seul serveur Node | Déploiement simple | Pas de montée en charge horizontale |
 | État des appels en mémoire | Rapide à écrire | Perdu au redémarrage |
 | Présence en mémoire | Pas de table à maintenir | Idem |
 | Maillage WebRTC | Pas de serveur média | 4 participants maximum conseillés |
 | Certificat auto-signé | Aucune configuration | Avertissement navigateur |
 | Fichiers privés via l'API | Contrôle d'accès simple | Le serveur relaie la bande passante |
 | MinIO | API S3 standard | Service externe à lancer |
-| Pas de framework front | Lisible pour débuter | Code plus verbeux |
+| Pas de framework front | Base légère | Code plus verbeux |
 
-Ces limites sont assumées : LOBA est un **projet pédagogique**, pas un
-produit de production. Les pistes d'amélioration sont dans
+Ces limites sont assumées : LOBA privilégie la simplicité et la lisibilité.
+Les pistes d'amélioration sont dans
 [06 — Aller plus loin](06-aller-plus-loin.md).
 
 ---
 
 ## 10. Parcours d'une requête dans le code
 
-Exemple : Alice ouvre la conversation 1.
+Exemple : Amina ouvre la conversation 1.
 
 ```
 public/js/chat.js
@@ -510,7 +509,7 @@ public/js/chat.js
 src/routes.js
   router.get('/conversations/:id/messages', auth.requireAuth, ...)
     ├─ auth.requireAuth        → lit le cookie, charge l'utilisateur
-    ├─ getMembership(1, alice) → vérifie l'accès
+    ├─ getMembership(1, userId) → vérifie l'accès
     ├─ db.many(...)            → SELECT ... ORDER BY id DESC LIMIT 50
     └─ res.json({ messages: rows.reverse().map(publicMessage) })
          │
@@ -527,5 +526,5 @@ Chaque couche a une responsabilité claire :
 - **serialize.js** : transformation SQL → JSON pour le navigateur ;
 - **chat.js** : état et affichage.
 
-👉 Passe au [03 — Guide d'utilisation](03-guide-utilisation.md) pour apprendre
-à te servir de l'application.
+👉 Passe au [03 — Guide d'utilisation](03-guide-utilisation.md) pour découvrir
+l'application au quotidien.

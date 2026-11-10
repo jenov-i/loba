@@ -194,7 +194,7 @@ function updateDocumentTitle() {
     (sum, conversation) => sum + (conversation.unread || 0),
     0
   );
-  document.title = total > 0 ? `(${total}) LOBA` : 'LOBA — Messagerie WebRTC';
+  document.title = total > 0 ? `(${total}) LOBA` : 'LOBA — Messagerie et appels';
 }
 
 // ===========================================================================

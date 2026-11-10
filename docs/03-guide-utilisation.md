@@ -15,35 +15,28 @@ Ouvre **https://localhost:3000** dans ton navigateur.
 
 ![Écran de connexion](screenshots/01-connexion.png)
 
-### Avec un compte de démonstration
-
-Après `npm run seed`, trois comptes existent :
-
-| Identifiant | Nom affiché | Mot de passe |
-|---|---|---|
-| `alice` | Alice Mbaïkoua | `loba1234` |
-| `bob` | Bob Nguema | `loba1234` |
-| `carol` | Carol Kouassi | `loba1234` |
-
-Saisis l'identifiant et le mot de passe, puis clique sur **Se connecter**.
-
 ### Créer un compte
 
-1. Clique sur l'onglet **Créer un compte**.
-2. Renseigne :
+Au premier lancement, clique sur l'onglet **Créer un compte**.
+
+1. Renseigne :
    - **Nom affiché** : 2 à 40 caractères, peut contenir des accents et des
-     espaces (ex. « Alice Mbaïkoua »).
+     espaces (ex. « Awa Diallo »).
    - **Identifiant** : 3 à 24 caractères, uniquement des lettres minuscules,
-     chiffres, point, tiret ou underscore (ex. `alice.mb`). Il doit être unique.
+     chiffres, point, tiret ou underscore (ex. `awa.diallo`). Il doit être unique.
    - **Mot de passe** : 6 caractères minimum.
-3. Clique sur **Créer mon compte**.
+2. Clique sur **Créer mon compte**.
 
 Tu es connecté automatiquement. Un cookie de session valable 30 jours est
 posé dans le navigateur.
 
+### Se reconnecter ensuite
+
+Utilise l'onglet **Connexion** avec ton identifiant et ton mot de passe.
+
 > **Astuce :** pour tester deux personnes sur le même ordinateur, utilise une
-> fenêtre normale pour Alice et une **fenêtre de navigation privée** pour Bob.
-> Deux comptes dans le même profil partageraient le même cookie.
+> fenêtre normale pour le premier compte et une **fenêtre de navigation privée**
+> pour le second. Deux comptes dans le même profil partageraient le même cookie.
 
 ---
 
@@ -58,8 +51,8 @@ posé dans le navigateur.
 │  Rechercher…         │                                                  │
 │  [Tout] [Non lus]    │              Messages                            │
 │                      │                                                  │
-│  ▸ Projet WebRTC     │                                                  │
-│  ▸ Bob Nguema        │                                                  │
+│  ▸ Équipe Produit    │                                                  │
+│  ▸ Yann Mbala        │                                                  │
 │    (aperçu, heure)   │                                                  │
 │                      │  ┌────────────────────────────────────────────┐  │
 │                      │  │ 📎  Écris un message…        🎤  ➤        │  │
@@ -107,7 +100,7 @@ redémarrage.
 
 ### Indicateur de frappe
 
-Quand tu écris, l'autre personne voit « Alice est en train d'écrire… ». Rien
+Quand tu écris, l'autre personne voit « Amina est en train d'écrire… ». Rien
 n'est stocké : l'indicateur disparaît après 2 secondes sans frappe.
 
 ### Messages non lus
@@ -225,12 +218,12 @@ est prévu pour **2 à 4 participants**. Au-delà, la qualité peut se dégrader
 
 C'est le scénario le plus simple pour vérifier que tout fonctionne.
 
-1. **Fenêtre normale** : connecte-toi en `alice`.
-2. **Fenêtre privée** : connecte-toi en `bob`.
-3. Alice ouvre la discussion « Bob Nguema ».
-4. Alice envoie un message : il doit apparaître chez Bob sans recharger.
-5. Alice clique sur **📞**.
-6. Bob accepte.
+1. **Fenêtre normale** : crée et connecte le premier compte.
+2. **Fenêtre privée** : crée et connecte le second compte.
+3. Le premier compte ouvre la discussion avec le second.
+4. Envoie un message : il doit apparaître chez l'autre sans recharger.
+5. Clique sur **📞**.
+6. L'autre personne accepte.
 7. Parlez : le son doit circuler dans les deux sens.
 8. Raccroche : les deux interfaces reviennent à la discussion.
 
@@ -243,7 +236,7 @@ Si tu n'as qu'un seul micro, utilise un casque pour éviter l'effet Larsen
    `https://192.168.1.42:3000`.
 2. Connecte le téléphone au **même Wi-Fi**.
 3. Ouvre l'adresse, accepte l'avertissement de certificat.
-4. Connecte-toi avec un autre compte.
+4. Crée un compte ou connecte-toi avec un autre compte.
 
 Si l'adresse ne répond pas, autorise le port 3000 dans le pare-feu de
 l'ordinateur.

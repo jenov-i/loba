@@ -62,7 +62,7 @@ Bash ; sinon, installe-le via <https://slproweb.com/products/Win32OpenSSL.html>.
 
 ---
 
-## 2. Récupérer le projet
+## 2. Récupérer le code
 
 ```bash
 git clone https://github.com/jenov-i/loba.git
@@ -128,29 +128,7 @@ Tu dois voir `loba-db` et `loba-minio` en état `running` (ou `healthy`).
 npm install
 ```
 
-### 4.3 Créer les comptes de démonstration
-
-```bash
-npm run seed
-```
-
-Résultat attendu :
-
-```
-[PostgreSQL] schéma vérifié
-Utilisateur prêt : alice (id 1)
-Utilisateur prêt : bob (id 4)
-Utilisateur prêt : carol (id 5)
-Discussion privée Alice ↔ Bob créée
-Groupe « Projet WebRTC » créé
-
-Comptes de démo prêts. Mot de passe : loba1234
-```
-
-> `npm run seed` est **idempotent** : tu peux le relancer sans créer de
-> doublons. Il ne supprime aucun message existant.
-
-### 4.4 Lancer LOBA
+### 4.3 Lancer LOBA
 
 ```bash
 npm start
@@ -167,7 +145,7 @@ Tu dois voir :
   Réseau  : https://192.168.1.42:3000
 ```
 
-### 4.5 Ouvrir l'application
+### 4.4 Ouvrir l'application
 
 Va sur **https://localhost:3000**.
 
@@ -180,7 +158,8 @@ Va sur **https://localhost:3000**.
 >
 > Sans cette étape, le navigateur bloquera le micro et la caméra.
 
-Connecte-toi avec `alice` / `loba1234`.
+Clique sur **Créer un compte** et choisis ton nom, ton identifiant et ton mot
+de passe. Le compte est créé immédiatement.
 
 ---
 
@@ -291,16 +270,15 @@ Identifiants à mettre dans .env :
 Ce serveur est prévu pour le développement. Il stocke les fichiers dans
 `.data/s3/`. Pour un vrai déploiement, utilise MinIO ou un service S3.
 
-### 5.6 Créer les comptes et lancer LOBA
+### 5.6 Lancer LOBA
 
 Dans un **second terminal** :
 
 ```bash
-npm run seed
 npm start
 ```
 
-Puis ouvre <https://localhost:3000>.
+Puis ouvre <https://localhost:3000> et crée ton compte.
 
 > **Important :** si tu changes `MINIO_PORT` ou le dossier de données, relance
 > **aussi** le serveur LOBA : il crée le bucket au démarrage.
@@ -321,8 +299,8 @@ que le serveur et l'API répondent (tu n'as simplement pas de cookie).
 ### 6.2 Vérification dans le navigateur
 
 1. La page de connexion s'affiche.
-2. `alice` / `loba1234` fonctionne.
-3. La liste montre « Bob Nguema » et « Projet WebRTC ».
+2. La création d'un compte fonctionne.
+3. Deux comptes peuvent démarrer une discussion.
 4. Un message envoyé apparaît instantanément dans une seconde fenêtre.
 5. Un fichier s'envoie et se télécharge.
 6. Un appel entre deux fenêtres sonne et fonctionne.
@@ -384,7 +362,7 @@ trafic entrant* → *Nouvelle règle* → port 3000.
 
    Puis relance `npm start` et accepte le nouvel avertissement sur le téléphone.
 
-4. Ouvre l'adresse sur le téléphone et connecte-toi avec un compte différent.
+4. Ouvre l'adresse sur le téléphone et crée un compte, ou connecte-toi avec un compte différent.
 
 ---
 
@@ -394,7 +372,6 @@ trafic entrant* → *Nouvelle règle* → port 3000.
 |---|---|
 | `npm start` | Démarre le serveur |
 | `npm run dev` | Démarre avec rechargement automatique (Node 20+) |
-| `npm run seed` | Crée/actualise les comptes de démo |
 | `npm run cert` | Supprime et régénère le certificat |
 | `npm run s3` | Démarre le stockage S3 local (option B) |
 | `docker compose up -d` | Démarre PostgreSQL + MinIO |
@@ -404,7 +381,7 @@ trafic entrant* → *Nouvelle règle* → port 3000.
 
 ---
 
-## 10. Mettre à jour le projet
+## 10. Mettre à jour l'application
 
 ```bash
 git pull
@@ -446,9 +423,8 @@ rm -rf loba
 - [ ] PostgreSQL répond (`docker compose ps` ou `psql`).
 - [ ] MinIO ou s3rver répond sur le port 9000.
 - [ ] `npm install` s'est terminé sans erreur.
-- [ ] `npm run seed` a créé alice, bob et carol.
 - [ ] `npm start` affiche « LOBA est démarré ! ».
 - [ ] Le certificat est accepté dans le navigateur.
-- [ ] La connexion avec `alice` / `loba1234` fonctionne.
+- [ ] La création d'un compte fonctionne.
 
 Si une étape échoue, consulte [05 — Dépannage](05-depannage.md).

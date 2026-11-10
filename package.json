@@ -2,12 +2,11 @@
   "name": "loba",
   "version": "1.0.0",
   "private": true,
-  "description": "LOBA - clone minimaliste de WhatsApp Web (WebRTC, PeerJS, Socket.IO, PostgreSQL, MinIO)",
+  "description": "LOBA - messagerie instantanée et appels audio/vidéo (WebRTC, PeerJS, Socket.IO, PostgreSQL, MinIO)",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "seed": "node scripts/seed.js",
     "cert": "node scripts/generate-cert.js",
     "s3": "node scripts/dev-s3.js"
   },

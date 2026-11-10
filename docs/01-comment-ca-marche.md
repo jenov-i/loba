@@ -11,8 +11,8 @@ les détails.
 
 Une application de messagerie doit faire deux choses très différentes :
 
-1. **Échanger de petits événements** : « Alice a envoyé un message », « Bob est
-   en ligne », « Carol appelle », « quelqu'un tape… ». Ces informations doivent
+1. **Échanger de petits événements** : « Amina a envoyé un message », « Yann est
+   en ligne », « Sarah appelle », « quelqu'un tape… ». Ces informations doivent
    arriver **instantanément** et de façon **fiable**.
 2. **Transporter du son et de la vidéo** en temps réel, avec le moins de
    latence possible.
@@ -176,7 +176,7 @@ LOBA en utilise trois sortes :
 - `conv:<id>` : tous les membres d'une conversation ;
 - `call:<id>` : tous les participants d'un appel en cours.
 
-Quand Alice envoie un message dans la conversation 7, le serveur fait :
+Quand Amina envoie un message dans la conversation 7, le serveur fait :
 
 ```js
 io.to('conv:7').emit('message:new', message);
@@ -188,25 +188,25 @@ Seuls les navigateurs présents dans la room `conv:7` reçoivent l'événement.
 
 ## 5. Le parcours complet d'un message
 
-Prenons Alice qui écrit « Salut Bob ! » dans leur discussion privée.
+Prenons Amina qui écrit « Salut Yann ! » dans leur discussion privée.
 
 ```
-1. Alice tape le texte et clique sur Envoyer.
+1. Amina tape le texte et clique sur Envoyer.
         │
 2. Le navigateur appelle :
-   POST /api/conversations/1/messages  { "body": "Salut Bob !" }
+   POST /api/conversations/1/messages  { "body": "Salut Yann !" }
         │
 3. Express vérifie le cookie de session (auth.requireAuth).
         │
-4. Le serveur vérifie qu'Alice est bien membre de la conversation 1.
+4. Le serveur vérifie qu'Amina est bien membre de la conversation 1.
         │
 5. INSERT INTO messages (...) RETURNING *   → PostgreSQL
         │
 6. Le serveur émet :
    io.to('conv:1').emit('message:new', message)
         │
-7. Le navigateur d'Alice ET celui de Bob reçoivent l'événement.
-   (Alice voit son message; Bob aussi, instantanément.)
+7. Le navigateur d'Amina ET celui de Yann reçoivent l'événement.
+   (Amina voit son message; Yann aussi, instantanément.)
         │
 8. Le serveur répond aussi à la requête HTTP avec le message créé.
 ```
@@ -238,40 +238,40 @@ fichier n'est lisible que par les membres de la conversation.
 ### 6.1 L'invitation (Socket.IO)
 
 ```
-Alice clique sur 📞
+Amina clique sur 📞
    │
    ├─ getUserMedia({ audio: true })          → flux local
-   ├─ PeerJS est déjà connecté                → peerId d'Alice
+   ├─ PeerJS est déjà connecté                → peerId d'Amina
    │
    └─ socket.emit('call:invite', { conversationId, kind: 'audio', peerId })
             │
             ▼
        Serveur : crée un appel en mémoire + une ligne dans la table calls
        Serveur : trouve les autres membres en ligne
-       Serveur : io.to('user:<bob>').emit('call:incoming', { ... })
+       Serveur : io.to('user:<id>').emit('call:incoming', { ... })
             │
             ▼
-       Bob reçoit l'événement → affiche la modale + joue la sonnerie
+       Yann reçoit l'événement → affiche la modale + joue la sonnerie
 ```
 
 ### 6.2 L'acceptation (Socket.IO puis WebRTC)
 
 ```
-Bob clique sur le bouton vert
+Yann clique sur le bouton vert
    │
    ├─ getUserMedia({ audio: true })
-   ├─ socket.emit('call:accept', { callId, peerId: peerIdDeBob })
+   ├─ socket.emit('call:accept', { callId, peerId: peerIdDeYann })
    │        │
    │        ▼
    │   Serveur : marque l'appel "active"
    │   Serveur : répond avec la liste des participants déjà présents
-   │   Serveur : prévient Alice via 'call:peer-joined'
+   │   Serveur : prévient Amina via 'call:peer-joined'
    │
    └─ Pour chaque participant déjà présent :
-          peer.call(peerIdDeAlice, fluxLocalDeBob)
+          peer.call(peerIdDeAmina, fluxLocalDeYann)
                    │
                    ▼
-          Alice reçoit peer.on('call') et répond avec son propre flux
+          Amina reçoit peer.on('call') et répond avec son propre flux
                    │
                    ▼
           Connexion WebRTC établie : le son circule directement
@@ -300,15 +300,15 @@ Pour un groupe de 3 personnes, il n'y a pas de « serveur d'appel ». Chaque
 navigateur ouvre une connexion WebRTC avec **chacun des autres** :
 
 ```
-          Alice
+          Amina
          /     \
         /       \
-     Bob ─────── Carol
+     Yann ─────── Sarah
 ```
 
-- Alice envoie son flux à Bob et à Carol.
-- Bob envoie son flux à Alice et à Carol.
-- Carol envoie son flux à Alice et à Bob.
+- Amina envoie son flux à Yann et à Sarah.
+- Yann envoie son flux à Amina et à Sarah.
+- Sarah envoie son flux à Amina et à Yann.
 
 C'est la topologie **maillée** (*mesh*). Avantages : simple, pas de serveur
 média, latence minimale. Inconvénient : le nombre de connexions explose.
@@ -450,5 +450,5 @@ faut l'accepter une fois. En production, on utiliserait un vrai certificat
 | Sonnerie Web Audio | `public/js/sounds.js` |
 | Branchement Socket.IO côté client | `public/js/app.js` |
 
-👉 Continue avec [02 — Architecture du projet](02-architecture-du-projet.md)
+👉 Continue avec [02 — Architecture du code](02-architecture-du-code.md)
 pour le rôle détaillé de chaque fichier, de la base de données et des API.
