@@ -78,14 +78,14 @@ module.exports = function initSockets(io) {
     socket.join(`user:${user.id}`);
 
     // On rejoint une "room" par conversation pour recevoir ses messages.
+    // Les nouvelles conversations rejoignent leur room via socketsJoin()
+    // dans la route POST /api/conversations : socket.rooms reste donc à jour.
     const conversations = await db.many(
       'SELECT conversation_id FROM conversation_members WHERE user_id = $1',
       [user.id]
     );
-    socket.data.conversationIds = new Set();
     for (const row of conversations) {
       socket.join(`conv:${row.conversation_id}`);
-      socket.data.conversationIds.add(row.conversation_id);
     }
 
     await db.query('UPDATE users SET last_seen = now() WHERE id = $1', [user.id]);
@@ -96,7 +96,7 @@ module.exports = function initSockets(io) {
     // -----------------------------------------------------------------------
     socket.on('typing', (payload = {}) => {
       const conversationId = Number(payload.conversationId);
-      if (!socket.data.conversationIds.has(conversationId)) return;
+      if (!socket.rooms.has(`conv:${conversationId}`)) return;
 
       socket.to(`conv:${conversationId}`).emit('typing', {
         conversationId,
@@ -115,7 +115,7 @@ module.exports = function initSockets(io) {
         const kind = payload.kind === 'audio' ? 'audio' : 'video';
         const peerId = String(payload.peerId || '');
 
-        if (!socket.data.conversationIds.has(conversationId)) {
+        if (!socket.rooms.has(`conv:${conversationId}`)) {
           return ack({ ok: false, error: 'Conversation introuvable.' });
         }
         if (!peerId) {
