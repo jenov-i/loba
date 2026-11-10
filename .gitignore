@@ -1,0 +1,6 @@
+node_modules/
+.env
+certs/*.pem
+.data/
+npm-debug.log*
+.DS_Store
