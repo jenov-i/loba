@@ -292,10 +292,14 @@ function fillUserLists(filter) {
 
 async function createDirectConversation(userId) {
   try {
-    const { conversationId } = await api.post('/api/conversations', {
+    const data = await api.post('/api/conversations', {
       type: 'direct',
       userId,
     });
+    // Le serveur renvoie { conversation } pour une nouvelle discussion
+    // et { conversationId } lorsqu'elle existait déjà.
+    const conversationId = data.conversationId ?? data.conversation?.id;
+    if (!conversationId) throw new Error('Réponse inattendue du serveur.');
     closeModal('newChatModal');
     await loadConversations();
     await selectConversation(conversationId);

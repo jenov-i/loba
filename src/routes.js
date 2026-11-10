@@ -389,6 +389,7 @@ module.exports = function createRoutes(io) {
 
       res.status(201).json({
         conversation: await getConversation(conversation.id, req.user.id),
+        conversationId: conversation.id,
       });
     } catch (error) {
       await client.query('ROLLBACK').catch(() => {});

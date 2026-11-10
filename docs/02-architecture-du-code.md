@@ -274,6 +274,9 @@ Si une discussion privée existe déjà entre les deux personnes, le serveur la
 renvoie avec `existed: true` au lieu d'en créer une seconde. C'est une règle
 métier importante : **une seule discussion directe par paire**.
 
+Dans tous les cas, la réponse contient `conversationId` (et l'objet
+`conversation` lors d'une création).
+
 ### Créer un groupe
 
 ```http
