@@ -10,6 +10,7 @@
 // pour 2 à 4 personnes. Au-delà, il faudrait un serveur SFU (voir la doc).
 // ---------------------------------------------------------------------------
 import { state, activeConversation, conversationTitle } from './state.js';
+import { api } from './api.js';
 import {
   $,
   escapeHtml,
@@ -25,6 +26,16 @@ import { startRingtone, startRingback, stopSounds } from './sounds.js';
 const els = {};
 let incomingTimeout = null;
 let retryCount = 0;
+
+// Utilisé si la route /api/ice-servers est indisponible : STUN public seul.
+// Dans ce cas, les appels entre deux réseaux différents peuvent échouer.
+const FALLBACK_ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+];
+
+let iceServersPromise = null;
+let turnConfigured = true;
 
 // ===========================================================================
 // INITIALISATION
@@ -70,9 +81,51 @@ export function setPeerStatus(ok, detail = '') {
     : detail || 'Signalisation en cours…';
 }
 
+/**
+ * Récupère les serveurs STUN/TURN auprès du serveur.
+ * Les identifiants TURN sont ainsi configurables sans toucher au code.
+ */
+async function loadIceServers() {
+  if (!iceServersPromise) {
+    iceServersPromise = (async () => {
+      try {
+        const data = await api.get('/api/ice-servers');
+        if (Array.isArray(data?.iceServers) && data.iceServers.length > 0) {
+          if (data.turn === false) {
+            turnConfigured = false;
+            console.warn(
+              '[ICE] Aucun serveur TURN configuré : les appels entre deux réseaux différents peuvent échouer.'
+            );
+          }
+          return data.iceServers;
+        }
+      } catch (error) {
+        console.warn('[ICE] configuration indisponible :', error.message);
+      }
+      return FALLBACK_ICE_SERVERS;
+    })();
+  }
+  return iceServersPromise;
+}
+
+let peerPromise = null;
+
 /** Crée (une seule fois) l'objet Peer de PeerJS. */
 export function initPeer() {
   if (state.peer && !state.peer.destroyed) return Promise.resolve(state.peer);
+
+  // Deux appels simultanés (clic + événement serveur) ne doivent pas créer
+  // deux Peer distincts.
+  if (!peerPromise) {
+    peerPromise = createPeer().finally(() => {
+      peerPromise = null;
+    });
+  }
+  return peerPromise;
+}
+
+async function createPeer() {
+  const iceServers = await loadIceServers();
 
   return new Promise((resolve, reject) => {
     setPeerStatus(false, 'Connexion à la signalisation…');
@@ -83,12 +136,7 @@ export function initPeer() {
       path: '/peer',
       secure: window.location.protocol === 'https:',
       debug: 0,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-        ],
-      },
+      config: { iceServers },
     });
 
     state.peer = peer;
@@ -97,6 +145,11 @@ export function initPeer() {
       state.peerId = id;
       retryCount = 0;
       setPeerStatus(true);
+      const label = $('#peerStatus');
+      if (label && !turnConfigured) {
+        label.title =
+          'Aucun serveur TURN configuré : les appels entre deux réseaux différents peuvent échouer.';
+      }
       resolve(peer);
     });
 
@@ -456,7 +509,20 @@ function registerConnection(call, connection, peerId) {
     renderCallUI();
   });
 
+  // Si l'ICE échoue, le son et l'image ne passeront jamais : on explique
+  // clairement la cause au lieu de laisser un chrono qui tourne dans le vide.
+  connection.on('iceStateChanged', (iceState) => {
+    if (iceState === 'failed') warnMediaBlocked(call);
+  });
+
+  // Filet de sécurité : aucun flux reçu au bout de 20 secondes.
+  clearTimeout(participant.mediaTimeout);
+  participant.mediaTimeout = setTimeout(() => {
+    if (!participant.stream) warnMediaBlocked(call);
+  }, 20000);
+
   connection.on('close', () => {
+    clearTimeout(participant.mediaTimeout);
     if (!state.call) return;
     call.participants.delete(peerId);
     renderCallUI();
@@ -465,6 +531,18 @@ function registerConnection(call, connection, peerId) {
   connection.on('error', (error) => {
     console.warn('[PeerJS media]', error);
   });
+}
+
+/** Prévient une seule fois que le média ne peut pas passer. */
+function warnMediaBlocked(call) {
+  if (call.mediaWarningShown) return;
+  call.mediaWarningShown = true;
+  setCallStatus('Connexion média impossible');
+  toast(
+    "Le son et l'image n'arrivent pas à passer entre les deux réseaux. " +
+      'Un serveur TURN doit être configuré (voir docs/06-aller-plus-loin.md).',
+    'error'
+  );
 }
 
 // ===========================================================================
@@ -484,6 +562,7 @@ function createCall({ id, conversationId, kind, isGroup, role, title }) {
     startedAt: null,
     timerId: null,
     answerTimeout: null,
+    mediaWarningShown: false,
   };
 }
 
@@ -639,6 +718,7 @@ function cleanupCall() {
     clearInterval(call.timerId);
 
     for (const participant of call.participants.values()) {
+      clearTimeout(participant.mediaTimeout);
       try {
         participant.connection?.close();
       } catch {

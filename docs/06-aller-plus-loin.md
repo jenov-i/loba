@@ -11,7 +11,7 @@ scalabilité et fonctionnalités.
 | Limite | Conséquence | Solution |
 |---|---|---|
 | Maillage WebRTC | 4 participants maximum conseillés | Serveur SFU |
-| STUN uniquement | Certains réseaux ne se connectent pas | Serveur TURN |
+| TURN non configuré | Les appels entre réseaux différents échouent | Serveur TURN (section 2) |
 | Un seul serveur Node | Présence et appels en mémoire | Redis + adaptateur Socket.IO |
 | Certificat auto-signé | Avertissement navigateur | Let's Encrypt + reverse proxy |
 | Pas de rate limiting | Bruteforce possible | Middleware de limitation |
@@ -26,29 +26,35 @@ scalabilité et fonctionnalités.
 
 ### 2.1 Pourquoi ?
 
-Deux navigateurs derrière des NAT stricts (entreprise, 4G opérateur) ne
-peuvent pas toujours établir une connexion directe. Un **TURN** relaie le
-trafic. C'est la solution standard, utilisée par toutes les applications de
-visioconférence.
+Deux navigateurs derrière des NAT stricts (entreprise, 4G opérateur, tunnel
+Cloudflare) ne peuvent pas toujours établir une connexion directe. Un **TURN**
+relaie le trafic. C'est la solution standard, utilisée par toutes les
+applications de visioconférence.
 
-### 2.2 Lancer coturn avec Docker
+Symptôme typique sans TURN : **l'appel sonne, l'autre personne décroche, le
+chrono tourne… mais il n'y a ni son ni image.** La signalisation (Socket.IO,
+PeerJS) passe, car elle utilise le serveur HTTPS ; seul le média direct
+échoue.
 
-Ajoute ce service à `docker-compose.yml` :
+LOBA intègre désormais la configuration TURN côté serveur : le navigateur
+demande la liste des serveurs ICE à `GET /api/ice-servers`. Il n'y a **rien à
+modifier dans le code**.
 
-```yaml
-  coturn:
-    image: coturn/coturn:latest
-    container_name: loba-coturn
-    restart: unless-stopped
-    network_mode: host
-    command:
-      - --lt-cred-mech
-      - --user=loba:motdepassefort
-      - --realm=loba.local
-      - --fingerprint
-      - --no-cli
-      - --min-port=49160
-      - --max-port=49200
+### 2.2 Option A — coturn auto-hébergé
+
+Le fichier `docker-compose.turn.yml` fourni lance coturn avec des
+identifiants éphémères (TURN REST API) :
+
+```bash
+# 1. Choisis un secret long et aléatoire
+openssl rand -hex 32
+
+# 2. Renseigne-le dans .env, avec l'adresse PUBLIQUE du serveur
+#    TURN_URLS=turn:IP_PUBLIQUE:3478?transport=udp,turn:IP_PUBLIQUE:3478?transport=tcp
+#    TURN_SECRET=<le secret généré>
+
+# 3. Démarre coturn
+docker compose -f docker-compose.turn.yml up -d
 ```
 
 > `network_mode: host` est nécessaire pour que les ports UDP soient accessibles.
@@ -60,44 +66,45 @@ Ouvre les ports dans le pare-feu :
 - **3478** UDP et TCP (STUN/TURN) ;
 - **49160–49200** UDP (relais média).
 
-### 2.3 Configurer le client
+Si coturn tourne derrière un NAT (VM, box Internet), ajoute dans
+`docker-compose.turn.yml` :
 
-Dans `public/js/calls.js`, la configuration actuelle est :
-
-```js
-config: {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-  ],
-},
+```yaml
+- --external-ip=IP_PUBLIQUE/IP_PRIVEE
 ```
 
-Ajoute le serveur TURN :
+### 2.3 Option B — Cloudflare Realtime TURN (derrière cloudflared)
 
-```js
-config: {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    {
-      urls: [
-        'turn:TON_DOMAINE_OU_IP:3478?transport=udp',
-        'turn:TON_DOMAINE_OU_IP:3478?transport=tcp',
-      ],
-      username: 'loba',
-      credential: 'motdepassefort',
-    },
-  ],
-},
+C'est la solution la plus simple quand LOBA est exposé par un tunnel
+Cloudflare (ou derrière une box sans redirection de ports) : le relais est
+public, inutile d'ouvrir des ports.
+
+1. Dans le tableau de bord Cloudflare : **Realtime → TURN Keys → Create**.
+2. Renseigne dans `.env` :
+
+```dotenv
+CF_TURN_KEY_ID=ta-cle
+CF_TURN_API_TOKEN=ton-jeton-api
 ```
 
-Redémarre le serveur et recharge les pages. Pour vérifier que le TURN est
-utilisé, ouvre `chrome://webrtc-internals` pendant un appel et regarde les
-candidats ICE de type `relay`.
+3. Redémarre LOBA. Les identifiants sont générés à la demande (et mis en
+   cache une heure) ; ils n'apparaissent jamais dans les fichiers publics.
 
-> **Sécurité :** ne mets pas un mot de passe TURN en clair dans un dépôt
-> public. Utilise une variable d'environnement exposée par une route
-> `GET /api/ice-servers`, ou des identifiants éphémères (TURN REST API).
+### 2.4 Vérifier que le TURN est utilisé
+
+Au démarrage, LOBA affiche :
+
+```
+Appels  : serveur TURN configuré (réseaux différents pris en charge)
+```
+
+Pendant un appel, ouvre `chrome://webrtc-internals` : les candidats ICE de
+type `relay` doivent apparaître, et la connexion passer de `new` à
+`connected`.
+
+> **Sécurité :** les identifiants TURN ne sont jamais écrits dans les fichiers
+> statiques. Ils sont soit éphémères (HMAC calculé par le serveur), soit
+> générés par l'API Cloudflare.
 
 ---
 

@@ -17,6 +17,7 @@ const auth = require('./auth');
 const storage = require('./storage');
 const state = require('./state');
 const config = require('./config');
+const ice = require('./ice');
 const { publicUser, publicMessage } = require('./serialize');
 
 const AVATAR_COLORS = [
@@ -182,6 +183,20 @@ module.exports = function createRoutes(io) {
   // Utilisateur connecté
   router.get('/me', auth.requireAuth, (req, res) => {
     res.json({ user: publicUser(req.user) });
+  });
+
+  // -------------------------------------------------------------------------
+  // APPELS : serveurs ICE (STUN + TURN)
+  //
+  // Le navigateur appelle cette route avant de créer son Peer. Les
+  // identifiants TURN restent ainsi côté serveur (ils ne sont pas dans les
+  // fichiers JavaScript publics).
+  // -------------------------------------------------------------------------
+  router.get('/ice-servers', auth.requireAuth, async (req, res) => {
+    res.json({
+      iceServers: await ice.iceServersFor(req.user.id),
+      turn: ice.hasTurn(),
+    });
   });
 
   // -------------------------------------------------------------------------

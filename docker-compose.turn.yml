@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------
+# Serveur TURN pour les appels audio/vidéo (coturn).
+#
+# À utiliser quand les deux participants ne sont PAS sur le même réseau :
+# 4G, NAT d'entreprise, tunnel Cloudflare, etc. Sans TURN, l'appel sonne et
+# est accepté, mais le son et l'image ne passent jamais.
+#
+# Lancement :
+#   docker compose -f docker-compose.turn.yml up -d
+#
+# Prérequis :
+#   - une machine avec une IP PUBLIQUE (ou des ports redirigés vers elle) ;
+#   - les ports 3478/udp + 3478/tcp et 49160-49200/udp ouverts.
+#
+# Puis dans .env :
+#   TURN_URLS=turn:IP_PUBLIQUE:3478?transport=udp,turn:IP_PUBLIQUE:3478?transport=tcp
+#   TURN_SECRET=le-meme-secret-que-ci-dessous
+#   TURN_TTL_SECONDS=3600
+#
+# Si la machine est derrière un NAT (VM, box), décommente --external-ip en
+# indiquant "IP_PUBLIQUE/IP_PRIVEE".
+# ---------------------------------------------------------------------------
+services:
+  coturn:
+    image: coturn/coturn:latest
+    container_name: loba-coturn
+    restart: unless-stopped
+    # Le mode host est nécessaire pour que les ports UDP du relais soient
+    # réellement joignables depuis Internet.
+    network_mode: host
+    command:
+      - --fingerprint
+      - --lt-cred-mech
+      - --use-auth-secret
+      - --static-auth-secret=${TURN_SECRET:?Définis TURN_SECRET dans .env}
+      - --realm=${TURN_REALM:-loba.local}
+      - --server-name=${TURN_REALM:-loba.local}
+      - --no-cli
+      - --no-multicast-peers
+      - --stale-nonce=600
+      - --listening-port=${TURN_PORT:-3478}
+      - --min-port=${TURN_MIN_PORT:-49160}
+      - --max-port=${TURN_MAX_PORT:-49200}
+      # Décommente et adapte si le serveur est derrière un NAT :
+      # - --external-ip=IP_PUBLIQUE/IP_PRIVEE

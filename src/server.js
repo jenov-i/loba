@@ -23,6 +23,7 @@ const { ensureCertificates, localIPv4Addresses } = require('./certificates');
 const createRoutes = require('./routes');
 const initSockets = require('./sockets');
 const { createPeerServer } = require('./peer-server');
+const ice = require('./ice');
 
 async function main() {
   // 1. Dépendances externes ------------------------------------------------
@@ -87,6 +88,15 @@ async function main() {
   console.log(`  Local   : ${scheme}://localhost:${config.port}`);
   for (const ip of localIPv4Addresses()) {
     console.log(`  Réseau  : ${scheme}://${ip}:${config.port}`);
+  }
+  if (ice.hasTurn()) {
+    console.log('  Appels  : serveur TURN configuré (réseaux différents pris en charge)');
+  } else {
+    console.warn(
+      '  Appels  : AUCUN serveur TURN configuré. Les appels entre deux réseaux\n' +
+        '            différents (4G, NAT strict, tunnel Cloudflare) échoueront.\n' +
+        '            Voir docs/06-aller-plus-loin.md section 2.'
+    );
   }
   console.log('');
 

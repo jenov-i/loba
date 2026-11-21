@@ -254,11 +254,26 @@ latérale pour réessayer.
 
 ### 3.4 L'appel sonne mais il n'y a pas de son
 
-Trois causes classiques :
+Symptôme : l'appel sonne, l'autre personne décroche, le chrono tourne, mais
+aucun son (ni image en vidéo) n'arrive.
 
-1. **Réseau trop restrictif** (entreprise, 4G opérateur) : la connexion directe
-   échoue. Il faut un serveur **TURN**. Voir
+**Cause n°1 : aucun serveur TURN.** C'est de loin la plus fréquente dès que
+les deux appareils ne sont pas sur le même réseau (4G, NAT d'entreprise,
+tunnel Cloudflare). Sans TURN, le média ne peut pas être relayé.
+
+1. Regarde le démarrage du serveur : s'il affiche
+   `AUCUN serveur TURN configuré`, c'est la cause.
+2. Configure un TURN (Cloudflare Realtime ou coturn) :
    [06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn-coturn).
+3. Redémarre LOBA : le message doit devenir
+   `serveur TURN configuré`.
+
+Pendant un appel, LOBA affiche désormais
+« Connexion média impossible » avec un message explicite si l'ICE échoue.
+
+**Autres causes :**
+
+1. **Réseau trop restrictif** (entreprise, 4G opérateur) : voir ci-dessus.
 2. **Mauvais périphérique de sortie** : vérifie le volume et la sortie audio de
    l'ordinateur.
 3. **Le micro est coupé** : le bouton 🎤 barré coupe ta piste audio.
