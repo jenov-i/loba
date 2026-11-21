@@ -91,7 +91,7 @@ async function cloudflareIceServers() {
 
   try {
     const response = await fetch(
-      `https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(keyId)}/credentials/generate`,
+      `https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(keyId)}/credentials/generate-ice-servers`,
       {
         method: 'POST',
         headers: {
@@ -119,11 +119,18 @@ async function cloudflareIceServers() {
 
     const iceServers = generated
       .filter((server) => server && server.urls)
-      .map((server) => ({
-        urls: server.urls,
-        username: server.username,
-        credential: server.credential,
-      }));
+      .map((server) => {
+        // Cloudflare ajoute parfois un port 53, que les navigateurs bloquent :
+        // il provoquerait une attente inutile pendant la collecte ICE.
+        const urls = (Array.isArray(server.urls) ? server.urls : [server.urls])
+          .filter((url) => !/:53(?:\?|$)/.test(url));
+        return {
+          urls: urls.length === 1 ? urls[0] : urls,
+          username: server.username,
+          credential: server.credential,
+        };
+      })
+      .filter((server) => server.urls && server.urls.length > 0);
 
     if (iceServers.length > 0) {
       // Marge de sécurité : on renouvelle 5 minutes avant l'expiration.

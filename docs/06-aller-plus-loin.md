@@ -79,7 +79,8 @@ C'est la solution la plus simple quand LOBA est exposé par un tunnel
 Cloudflare (ou derrière une box sans redirection de ports) : le relais est
 public, inutile d'ouvrir des ports.
 
-1. Dans le tableau de bord Cloudflare : **Realtime → TURN Keys → Create**.
+1. Dans le tableau de bord Cloudflare :
+   [Realtime → TURN Keys](https://dash.cloudflare.com/?to=/:account/calls) → **Create**.
 2. Renseigne dans `.env` :
 
 ```dotenv
