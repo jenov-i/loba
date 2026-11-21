@@ -90,7 +90,23 @@ async function main() {
     console.log(`  Réseau  : ${scheme}://${ip}:${config.port}`);
   }
   if (ice.hasTurn()) {
-    console.log('  Appels  : serveur TURN configuré (réseaux différents pris en charge)');
+    const endpoints = [
+      ...config.ice.turnUrls,
+      config.ice.cloudflare.keyId && config.ice.cloudflare.apiToken
+        ? 'Cloudflare Realtime'
+        : '',
+    ]
+      .filter(Boolean)
+      .join(', ');
+    console.log(`  Appels  : serveur TURN configuré (${endpoints})`);
+    const warning = ice.turnWarning();
+    if (warning) {
+      console.warn(
+        `            ATTENTION : ${warning}.\n` +
+          '            Les appels depuis un autre réseau (4G, tunnel) échoueront\n' +
+          '            tant que TURN_URLS ne pointe pas vers une adresse publique.'
+      );
+    }
   } else {
     console.warn(
       '  Appels  : AUCUN serveur TURN configuré. Les appels entre deux réseaux\n' +

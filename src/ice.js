@@ -29,6 +29,22 @@ function hasTurn() {
   );
 }
 
+/**
+ * Signale les TURN configurés sur une adresse privée : ils fonctionnent sur
+ * le réseau local, mais pas depuis internet (4G, autre réseau).
+ */
+function turnWarning() {
+  const { turnUrls } = config.ice;
+  if (turnUrls.length === 0) return null;
+  const isPrivate = (url) =>
+    /^(?:turns?):(?:127\.|10\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.|localhost)/.test(
+      url
+    );
+  return turnUrls.every(isPrivate)
+    ? 'adresse privée : ces serveurs TURN ne sont joignables que sur le réseau local'
+    : null;
+}
+
 /** Identifiants TURN éphémères, compatibles coturn --use-auth-secret. */
 function ephemeralTurnCredentials(userId) {
   const { turnSecret, turnTtlSeconds } = config.ice;
@@ -132,4 +148,4 @@ async function iceServersFor(userId) {
   return iceServers;
 }
 
-module.exports = { iceServersFor, hasTurn };
+module.exports = { iceServersFor, hasTurn, turnWarning };
