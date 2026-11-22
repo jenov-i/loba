@@ -190,6 +190,12 @@ Pendant l'appel :
 La durée de l'appel s'affiche en haut. Un appel sans réponse se termine
 automatiquement au bout de **45 secondes**.
 
+> **Appels entre deux réseaux différents** (4G, autre Wi‑Fi, tunnel
+> Cloudflare) : ils nécessitent un serveur **TURN**. Sans TURN, l'appel sonne
+> et peut être accepté, mais le son et l'image ne passent pas — LOBA affiche
+> alors « Connexion média impossible ». Voir
+> [06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn).
+
 ### Appel de groupe
 
 1. Ouvre la discussion de groupe.
@@ -211,6 +217,8 @@ est prévu pour **2 à 4 participants**. Au-delà, la qualité peut se dégrader
 - La tonalité d'appel sortant (« bip… bip… ») est générée par le navigateur.
 - Le serveur ne voit ni le son ni l'image : ils passent directement entre les
   navigateurs.
+- Sur le **même réseau**, un appel fonctionne sans configuration. Entre deux
+  réseaux, il faut un serveur TURN (voir ci-dessus).
 
 ---
 
@@ -301,7 +309,8 @@ Ces idées sont détaillées dans
 | Pas de sonnerie | Clique d'abord dans la page (déverrouillage audio), vérifie le volume |
 | Le micro est refusé | Autorise le site dans le navigateur, vérifie que l'URL est en `https://` |
 | « Signalisation indisponible » | Recharge la page, vérifie le port 3000 et le pare-feu |
-| L'appel sonne mais pas de son | Réseau trop restrictif : un serveur TURN est nécessaire |
+| L'appel sonne mais pas de son | Aucun TURN configuré, ou TURN injoignable depuis internet (voir [docs/06](06-aller-plus-loin.md#2-ajouter-un-serveur-turn)) |
+| « Connexion média impossible » | L'ICE a échoué : configure un TURN public |
 | Fichier refusé | Taille supérieure à 25 Mo ou MinIO arrêté |
 
 Le guide complet : [05 — Dépannage](05-depannage.md).

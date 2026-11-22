@@ -264,7 +264,7 @@ tunnel Cloudflare). Sans TURN, le média ne peut pas être relayé.
 1. Regarde le démarrage du serveur : s'il affiche
    `AUCUN serveur TURN configuré`, c'est la cause.
 2. Configure un TURN (Cloudflare Realtime ou coturn) :
-   [06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn-coturn).
+   [06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn).
 3. Redémarre LOBA : le message doit devenir
    `serveur TURN configuré`.
 
@@ -435,7 +435,7 @@ messages arrivent avec du retard, et les appels PeerJS peuvent échouer.
 
 Sans TURN, la connexion directe peut échouer. C'est une limite de WebRTC, pas
 un bug de LOBA. Voir
-[06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn-coturn).
+[06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn).
 
 ---
 
@@ -533,9 +533,37 @@ doit rester ouverte (statut 101 *Switching Protocols*).
 ```bash
 docker compose logs -f db
 docker compose logs -f minio
+docker compose logs -f loba-coturn   # si le relais TURN est utilisé
 ```
 
-### 8.7 Tout est cassé, je veux repartir de zéro
+### 8.7 Vérifier la configuration TURN des appels
+
+1. Au démarrage, la ligne « Appels » indique ce que LOBA utilise :
+
+   ```
+   Appels  : serveur TURN configuré (turn:IP:3478?transport=udp, ...)
+   ```
+
+   Si elle affiche `AUCUN serveur TURN configuré`, les appels entre deux
+   réseaux différents échoueront.
+
+2. La route authentifiée renvoie la liste réellement fournie au navigateur :
+
+   ```bash
+   curl -k -b cookies.txt https://localhost:3000/api/ice-servers
+   ```
+
+   Attendu : un tableau `iceServers` contenant les entrées `stun:` et `turn:`
+   (avec `username`/`credential` pour TURN).
+
+3. Si le TURN est sur une adresse privée (`192.168.…`, `10.…`), il n'est
+   joignable que sur le réseau local. Un avertissement s'affiche au démarrage :
+   il faut une adresse **publique** ou Cloudflare Realtime TURN.
+
+4. Pendant un appel, ouvre `chrome://webrtc-internals` : la connexion doit
+   passer à `connected` et des candidats de type `relay` doivent apparaître.
+
+### 8.8 Tout est cassé, je veux repartir de zéro
 
 ```bash
 # Arrêter le serveur : Ctrl+C
@@ -564,7 +592,9 @@ npm start
 | Avertissement certificat | Certificat auto-signé | Accepter l'exception |
 | Micro refusé | HTTPS non accepté | Accepter le certificat, autoriser le site |
 | Signalisation indisponible | WebSocket/proxy/port | Vérifier `/peer/peerjs`, pare-feu |
-| Pas de son en appel | NAT strict | Ajouter un serveur TURN |
+| Pas de son en appel | Aucun TURN, ou TURN non joignable | Configurer un TURN public (voir § 8.7) |
+| « Connexion média impossible » | ICE `failed` | TURN absent/injoignable depuis internet |
+| `AUCUN serveur TURN configuré` | `.env` sans TURN | Renseigner `TURN_URLS` ou `CF_TURN_*` |
 | Fichier `413` | > 25 Mo | Compresser ou augmenter la limite |
 | Fichier `503` | MinIO arrêté | Relancer le stockage |
 | Pas de messages en direct | WebSocket bloqué | Vérifier proxy/pare-feu |

@@ -57,6 +57,7 @@ LOBA/
 │   ├── routes.js               Toutes les routes /api
 │   ├── sockets.js              Temps réel + machine d'état des appels
 │   ├── peer-server.js          Signalisation PeerJS sur /peer
+│   ├── ice.js                  Serveurs STUN/TURN (identifiants éphémères)
 │   ├── storage.js              Client MinIO : put/get/remove
 │   ├── certificates.js         Génère certs/key.pem et cert.pem
 │   ├── state.js                Présence en mémoire (userId → sockets)
@@ -128,7 +129,15 @@ Deux points importants :
    `noServer` décrit dans `src/peer-server.js`.
 
 Au démarrage, LOBA affiche aussi les adresses IPv4 locales pour permettre
-l'accès depuis un téléphone sur le même Wi-Fi.
+l'accès depuis un téléphone sur le même Wi-Fi, et l'état de la configuration
+TURN (`src/ice.js`) :
+
+```
+Appels  : serveur TURN configuré (turn:192.168.1.42:3478?transport=udp, ...)
+```
+
+ou, si aucun TURN n'est configuré, un avertissement expliquant que les appels
+entre réseaux différents échoueront.
 
 ---
 
@@ -238,6 +247,7 @@ elles exigent un cookie de session valide (`auth.requireAuth`).
 | POST | `/api/auth/login` | `{ username, password }` | `200 { user }` + cookie |
 | POST | `/api/auth/logout` | — | `{ ok: true }` |
 | GET | `/api/me` | — | `{ user }` ou `401` |
+| GET | `/api/ice-servers` | — | `{ iceServers: [...], turn: bool }` |
 | GET | `/api/users?q=` | recherche facultative | `{ users: [...] }` |
 | GET | `/api/conversations` | — | `{ conversations: [...] }` |
 | POST | `/api/conversations` | `{ type: 'direct', userId }` **ou** `{ type: 'group', name, memberIds }` | `201 { conversation }` |
@@ -431,11 +441,14 @@ Règles implémentées :
 ### 7.3 `calls.js` — appels
 
 - création de l'objet `Peer` et gestion des erreurs ;
+- récupération des serveurs ICE via `GET /api/ice-servers` (avec repli sur des
+  STUN publics si la route est indisponible) ;
 - `startCall('audio' | 'video')` ;
 - réception d'un appel, sonnerie, acceptation, refus ;
 - connexions média et attachement des flux aux balises `<video>`/`<audio>` ;
 - maillage pour les groupes ;
 - minuteur, micro, caméra, raccrochage ;
+- détection d'échec ICE (`iceStateChanged`) et message explicite ;
 - nettoyage complet (arrêt des pistes, fermeture des connexions).
 
 ### 7.4 `state.js` (client) — état partagé
@@ -472,6 +485,12 @@ Toutes les variables sont lues dans `.env` par `src/config.js`.
 | `MINIO_SECRET_KEY` | `minioadmin` | Secret |
 | `MINIO_BUCKET` | `loba` | Nom du bucket |
 | `MAX_UPLOAD_MB` | `25` | Taille maximale d'un fichier |
+| `STUN_URLS` | STUN Google | Liste STUN séparée par des virgules |
+| `TURN_URLS` | *(vide)* | Liste TURN séparée par des virgules |
+| `TURN_USERNAME` / `TURN_CREDENTIAL` | *(vide)* | Identifiants TURN fixes |
+| `TURN_SECRET` | *(vide)* | Secret partagé coturn → identifiants éphémères |
+| `TURN_TTL_SECONDS` | `3600` | Durée de validité des identifiants TURN |
+| `CF_TURN_KEY_ID` / `CF_TURN_API_TOKEN` | *(vide)* | Cloudflare Realtime TURN |
 | `SESSION_COOKIE` | `loba_session` | Nom du cookie |
 | `PGSSL` | `false` | `true` pour activer TLS vers PostgreSQL |
 
@@ -488,6 +507,7 @@ Le fichier `.env` n'est **jamais** versionné (voir `.gitignore`). Seul
 | État des appels en mémoire | Rapide à écrire | Perdu au redémarrage |
 | Présence en mémoire | Pas de table à maintenir | Idem |
 | Maillage WebRTC | Pas de serveur média | 4 participants maximum conseillés |
+| TURN optionnel | Simple sur le même réseau | Obligatoire entre réseaux différents |
 | Certificat auto-signé | Aucune configuration | Avertissement navigateur |
 | Fichiers privés via l'API | Contrôle d'accès simple | Le serveur relaie la bande passante |
 | MinIO | API S3 standard | Service externe à lancer |

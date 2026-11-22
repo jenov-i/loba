@@ -22,7 +22,7 @@ scalabilité et fonctionnalités.
 
 ---
 
-## 2. Ajouter un serveur TURN (coturn)
+## 2. Ajouter un serveur TURN
 
 ### 2.1 Pourquoi ?
 

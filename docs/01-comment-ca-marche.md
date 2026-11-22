@@ -98,12 +98,25 @@ La plupart des ordinateurs sont derrière un routeur (NAT) : ils n'ont pas
 d'adresse publique directement joignable.
 
 - **STUN** : un serveur public qui répond « voici l'adresse que le monde voit
-  de toi ». Il suffit pour beaucoup de réseaux domestiques. LOBA utilise les
-  serveurs STUN de Google.
+  de toi ». Il suffit pour beaucoup de réseaux domestiques.
 - **TURN** : un relais. Si la connexion directe est impossible (réseau
-  d'entreprise, 4G opérateur), le trafic passe par le serveur TURN. LOBA n'en
-  fournit pas par défaut ; voir
-  [06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn-coturn).
+  d'entreprise, 4G opérateur, tunnel Cloudflare), le média passe par le serveur
+  TURN.
+
+Sans TURN, le scénario typique est : **l'appel sonne, l'autre personne
+décroche, le chrono tourne, mais aucun son ni image n'arrive.** La
+signalisation passe (elle utilise le serveur HTTPS), mais pas le média direct.
+
+LOBA intègre cette configuration côté serveur :
+
+1. `.env` décrit les serveurs (`STUN_URLS`, `TURN_URLS`, `TURN_SECRET`, ou
+   `CF_TURN_KEY_ID` / `CF_TURN_API_TOKEN` pour Cloudflare Realtime TURN) ;
+2. le navigateur appelle `GET /api/ice-servers` au démarrage ;
+3. `src/ice.js` renvoie la liste, avec des identifiants TURN **éphémères**
+   (jamais écrits dans les fichiers publics).
+
+Le détail de la configuration est dans
+[06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn).
 
 ---
 
@@ -279,6 +292,12 @@ Yann clique sur le bouton vert
 
 Le serveur ne voit **jamais** l'audio. Il a seulement aidé les deux
 navigateurs à se trouver.
+
+> **Si la connexion média échoue** (réseaux différents sans TURN), PeerJS
+> émet `iceStateChanged` avec l'état `failed`. LOBA affiche alors
+> « Connexion média impossible » et explique qu'un serveur TURN est
+> nécessaire, au lieu de laisser un chrono tourner sans son. Voir
+> [06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn).
 
 ### 6.3 Le raccrochage
 

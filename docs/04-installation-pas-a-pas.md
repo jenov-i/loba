@@ -103,6 +103,37 @@ MAX_UPLOAD_MB=25
 
 > Ne mets **jamais** ce fichier sur GitHub : il est déjà dans `.gitignore`.
 
+### 3.1 Configurer les appels (TURN)
+
+Le chat, les vocaux et les fichiers fonctionnent sans configuration
+supplémentaire. Pour les **appels entre deux réseaux différents**, ajoute un
+serveur TURN. Deux possibilités :
+
+**Cloudflare Realtime TURN** (aucun port à ouvrir, recommandé derrière un
+tunnel) :
+
+```dotenv
+CF_TURN_KEY_ID=ta-cle
+CF_TURN_API_TOKEN=ton-jeton
+```
+
+**coturn auto-hébergé** (machine avec IP publique) :
+
+```dotenv
+TURN_URLS=turn:IP_PUBLIQUE:3478?transport=udp,turn:IP_PUBLIQUE:3478?transport=tcp
+TURN_SECRET=secret-long-et-aleatoire
+TURN_TTL_SECONDS=3600
+```
+
+Puis démarre le relais :
+
+```bash
+docker compose -f docker-compose.turn.yml up -d
+```
+
+Le détail (ports, NAT, vérification) est dans
+[06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn).
+
 ---
 
 ## 4. Option A — avec Docker (recommandée)
@@ -364,6 +395,9 @@ trafic entrant* → *Nouvelle règle* → port 3000.
 
 4. Ouvre l'adresse sur le téléphone et crée un compte, ou connecte-toi avec un compte différent.
 
+> **Appels depuis la 4G ou un autre réseau** : il faut un TURN public. Voir
+> [06 — Aller plus loin](06-aller-plus-loin.md#2-ajouter-un-serveur-turn).
+
 ---
 
 ## 9. Commandes utiles
@@ -375,6 +409,7 @@ trafic entrant* → *Nouvelle règle* → port 3000.
 | `npm run cert` | Supprime et régénère le certificat |
 | `npm run s3` | Démarre le stockage S3 local (option B) |
 | `docker compose up -d` | Démarre PostgreSQL + MinIO |
+| `docker compose -f docker-compose.turn.yml up -d` | Démarre le relais TURN (coturn) |
 | `docker compose stop` | Arrête les conteneurs (données conservées) |
 | `docker compose down` | Supprime les conteneurs (données conservées) |
 | `docker compose down -v` | Supprime **aussi les volumes** (tout est effacé) |
@@ -424,6 +459,7 @@ rm -rf loba
 - [ ] MinIO ou s3rver répond sur le port 9000.
 - [ ] `npm install` s'est terminé sans erreur.
 - [ ] `npm start` affiche « LOBA est démarré ! ».
+- [ ] La ligne « Appels » indique si un TURN est configuré.
 - [ ] Le certificat est accepté dans le navigateur.
 - [ ] La création d'un compte fonctionne.
 
